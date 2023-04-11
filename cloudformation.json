@@ -1,5 +1,13 @@
 {
     "Outputs": {
+        "PrivateKeyFileName": {
+            "Export": {
+                "Name": "PrivateKeyFileName"
+            },
+            "Value": {
+                "Fn::Sub": "${KeyPair}.pem"
+            }
+        },
         "PrivateKeyParameterName": {
             "Export": {
                 "Name": "PrivateKeyParameterName"
