@@ -233,6 +233,7 @@
         },
         "Subnet": {
             "Type": "AWS::EC2::Subnet",
+            "DependsOn": "Ipv6VpcCidrBlock",
             "Properties": {
                 "AssignIpv6AddressOnCreation": true,
                 "CidrBlock": {
@@ -242,30 +243,24 @@
                     ]
                 },
                 "Ipv6CidrBlock": {
-                    "Fn::Sub": [
-                        "${Prefix}00::/64",
+                    "Fn::Select": [
+                        0,
                         {
-                            "Prefix": {
-                                "Fn::Select": [
-                                    0,
-                                    {
-                                        "Fn::Split": [
-                                            "00::/56",
-                                            {
-                                                "Fn::Select": [
-                                                    0,
-                                                    {
-                                                        "Fn::GetAtt": [
-                                                            "Vpc",
-                                                            "Ipv6CidrBlocks"
-                                                        ]
-                                                    }
-                                                ]
-                                            }
-                                        ]
-                                    }
-                                ]
-                            }
+                            "Fn::Cidr": [
+                                {
+                                    "Fn::Select": [
+                                        0,
+                                        {
+                                            "Fn::GetAtt": [
+                                                "Vpc",
+                                                "Ipv6CidrBlocks"
+                                            ]
+                                        }
+                                    ]
+                                },
+                                1,
+                                64
+                            ]
                         }
                     ]
                 },

@@ -21,7 +21,7 @@ cd ovpn
 wget https://git.io/vpn -O openvpn-install.sh
 chmod +x openvpn-install.sh
 sudo ./openvpn-install.sh
-sudo mv /root/client.ovpn ./client.ovpn
+sudo mv /root/client.ovpn ./
 exit
 ```
 
@@ -31,7 +31,7 @@ exit
 scp -i "<PrivateKeyFileName>.pem" ubuntu@<PublicDnsName>:~/ovpn/client.ovpn ./
 ```
 
-1. This will copy the `client.ovpn` file to the local computer so it can be used by a OpenVPN client.
+8. This will copy the `client.ovpn` file to the local computer so it can be used by a OpenVPN client.
 
 ## Reference
 
