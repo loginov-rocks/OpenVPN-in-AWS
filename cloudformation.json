@@ -1,0 +1,226 @@
+{
+    "Outputs": {
+        "Ip": {
+            "Export": {
+                "Name": "Ip"
+            },
+            "Value": {
+                "Ref": "ElasticIp"
+            }
+        }
+    },
+    "Parameters": {
+        "OpenVpnPort": {
+            "Default": 1194,
+            "Type": "Number"
+        },
+        "SshPort": {
+            "Default": 22,
+            "Type": "Number"
+        },
+        "VpcCidrBlock": {
+            "Default": "10.0.0.0/28",
+            "Type": "String"
+        }
+    },
+    "Resources": {
+        "ElasticIp": {
+            "Type": "AWS::EC2::EIP",
+            "Properties": {
+                "Domain": "vpc"
+            }
+        },
+        "InternetGateway": {
+            "Type": "AWS::EC2::InternetGateway",
+            "Properties": {
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Fn::Sub": "${AWS::StackName}-vpc-igw"
+                        }
+                    }
+                ]
+            }
+        },
+        "DefaultIpv6Route": {
+            "Type": "AWS::EC2::Route",
+            "DependsOn": "VpcGatewayAttachment",
+            "Properties": {
+                "DestinationIpv6CidrBlock": "::/0",
+                "GatewayId": {
+                    "Ref": "InternetGateway"
+                },
+                "RouteTableId": {
+                    "Ref": "RouteTable"
+                }
+            }
+        },
+        "DefaultRoute": {
+            "Type": "AWS::EC2::Route",
+            "DependsOn": "VpcGatewayAttachment",
+            "Properties": {
+                "DestinationCidrBlock": "0.0.0.0/0",
+                "GatewayId": {
+                    "Ref": "InternetGateway"
+                },
+                "RouteTableId": {
+                    "Ref": "RouteTable"
+                }
+            }
+        },
+        "RouteTable": {
+            "Type": "AWS::EC2::RouteTable",
+            "Properties": {
+                "VpcId": {
+                    "Ref": "Vpc"
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Fn::Sub": "${AWS::StackName}-vpc-rt"
+                        }
+                    }
+                ]
+            }
+        },
+        "SecurityGroup": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "Security Group for Instance Running OpenVPN",
+                "GroupName": {
+                    "Fn::Sub": "${AWS::StackName}-instance-sg"
+                },
+                "SecurityGroupIngress": [
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "Description": "Inbound SSH connections from Anywhere",
+                        "FromPort": {
+                            "Ref": "SshPort"
+                        },
+                        "IpProtocol": "tcp",
+                        "ToPort": {
+                            "Ref": "SshPort"
+                        }
+                    },
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "Description": "Inbound OpenVPN connections from Anywhere",
+                        "FromPort": {
+                            "Ref": "OpenVpnPort"
+                        },
+                        "IpProtocol": "udp",
+                        "ToPort": {
+                            "Ref": "OpenVpnPort"
+                        }
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "Vpc"
+                }
+            }
+        },
+        "Subnet": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+                "AssignIpv6AddressOnCreation": true,
+                "CidrBlock": {
+                    "Fn::GetAtt": [
+                        "Vpc",
+                        "CidrBlock"
+                    ]
+                },
+                "Ipv6CidrBlock": {
+                    "Fn::Sub": [
+                        "${Prefix}00::/64",
+                        {
+                            "Prefix": {
+                                "Fn::Select": [
+                                    0,
+                                    {
+                                        "Fn::Split": [
+                                            "00::/56",
+                                            {
+                                                "Fn::Select": [
+                                                    0,
+                                                    {
+                                                        "Fn::GetAtt": [
+                                                            "Vpc",
+                                                            "Ipv6CidrBlocks"
+                                                        ]
+                                                    }
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                "MapPublicIpOnLaunch": true,
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Fn::Sub": "${AWS::StackName}-subnet"
+                        }
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "Vpc"
+                }
+            }
+        },
+        "SubnetRouteTableAssociation": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties": {
+                "RouteTableId": {
+                    "Ref": "RouteTable"
+                },
+                "SubnetId": {
+                    "Ref": "Subnet"
+                }
+            }
+        },
+        "Vpc": {
+            "Type": "AWS::EC2::VPC",
+            "Properties": {
+                "CidrBlock": {
+                    "Ref": "VpcCidrBlock"
+                },
+                "EnableDnsHostnames": true,
+                "EnableDnsSupport": true,
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Fn::Sub": "${AWS::StackName}-vpc"
+                        }
+                    }
+                ]
+            }
+        },
+        "Ipv6VpcCidrBlock": {
+            "Type": "AWS::EC2::VPCCidrBlock",
+            "Properties": {
+                "AmazonProvidedIpv6CidrBlock": true,
+                "VpcId": {
+                    "Ref": "Vpc"
+                }
+            }
+        },
+        "VpcGatewayAttachment": {
+            "Type": "AWS::EC2::VPCGatewayAttachment",
+            "Properties": {
+                "InternetGatewayId": {
+                    "Ref": "InternetGateway"
+                },
+                "VpcId": {
+                    "Ref": "Vpc"
+                }
+            }
+        }
+    }
+}
