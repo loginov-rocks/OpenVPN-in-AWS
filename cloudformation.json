@@ -1,15 +1,63 @@
 {
     "Outputs": {
-        "Ip": {
+        "PrivateKeyParameterName": {
             "Export": {
-                "Name": "Ip"
+                "Name": "PrivateKeyParameterName"
             },
             "Value": {
-                "Ref": "ElasticIp"
+                "Fn::Sub": [
+                    "/ec2/keypair/${KeyPairId}",
+                    {
+                        "KeyPairId": {
+                            "Fn::GetAtt": [
+                                "KeyPair",
+                                "KeyPairId"
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        "PublicDnsName": {
+            "Export": {
+                "Name": "PublicDnsName"
+            },
+            "Value": {
+                "Fn::GetAtt": [
+                    "Instance",
+                    "PublicDnsName"
+                ]
+            }
+        },
+        "PublicIp": {
+            "Export": {
+                "Name": "PublicIp"
+            },
+            "Value": {
+                "Fn::GetAtt": [
+                    "Instance",
+                    "PublicIp"
+                ]
             }
         }
     },
     "Parameters": {
+        "InstanceImageId": {
+            "Default": "ami-0123d78c6ca752aeb",
+            "Type": "AWS::EC2::Image::Id"
+        },
+        "InstanceType": {
+            "Default": "t4g.nano",
+            "Type": "String"
+        },
+        "InstanceVolumeSize": {
+            "Default": 8,
+            "Type": "Number"
+        },
+        "InstanceVolumeType": {
+            "Default": "gp3",
+            "Type": "String"
+        },
         "OpenVpnPort": {
             "Default": 1194,
             "Type": "Number"
@@ -27,7 +75,53 @@
         "ElasticIp": {
             "Type": "AWS::EC2::EIP",
             "Properties": {
-                "Domain": "vpc"
+                "InstanceId": {
+                    "Ref": "Instance"
+                }
+            }
+        },
+        "Instance": {
+            "Type": "AWS::EC2::Instance",
+            "Properties": {
+                "BlockDeviceMappings": [
+                    {
+                        "DeviceName": "/dev/sda1",
+                        "Ebs": {
+                            "DeleteOnTermination": true,
+                            "VolumeSize": {
+                                "Ref": "InstanceVolumeSize"
+                            },
+                            "VolumeType": {
+                                "Ref": "InstanceVolumeType"
+                            }
+                        }
+                    }
+                ],
+                "ImageId": {
+                    "Ref": "InstanceImageId"
+                },
+                "InstanceType": {
+                    "Ref": "InstanceType"
+                },
+                "KeyName": {
+                    "Ref": "KeyPair"
+                },
+                "SecurityGroupIds": [
+                    {
+                        "Ref": "SecurityGroup"
+                    }
+                ],
+                "SubnetId": {
+                    "Ref": "Subnet"
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Fn::Sub": "${AWS::StackName}-instance"
+                        }
+                    }
+                ]
             }
         },
         "InternetGateway": {
@@ -41,6 +135,14 @@
                         }
                     }
                 ]
+            }
+        },
+        "KeyPair": {
+            "Type": "AWS::EC2::KeyPair",
+            "Properties": {
+                "KeyName": {
+                    "Fn::Sub": "${AWS::StackName}-instance-key-pair"
+                }
             }
         },
         "DefaultIpv6Route": {
