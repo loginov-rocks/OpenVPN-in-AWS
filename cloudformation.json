@@ -82,6 +82,7 @@
     "Resources": {
         "ElasticIp": {
             "Type": "AWS::EC2::EIP",
+            "DependsOn": "VpcGatewayAttachment",
             "Properties": {
                 "InstanceId": {
                     "Ref": "Instance"
