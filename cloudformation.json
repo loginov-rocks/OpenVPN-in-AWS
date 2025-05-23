@@ -39,7 +39,7 @@
   },
   "Parameters": {
     "InstanceImageId": {
-      "Default": "ami-0123d78c6ca752aeb",
+      "Default": "ami-0970016453b96bffe",
       "Type": "AWS::EC2::Image::Id"
     },
     "InstanceType": {
@@ -57,6 +57,14 @@
     "OpenVpnPort": {
       "Default": 1194,
       "Type": "Number"
+    },
+    "OpenVpnProtocol": {
+      "AllowedValues": [
+        "tcp",
+        "udp"
+      ],
+      "Default": "udp",
+      "Type": "String"
     },
     "SshPort": {
       "Default": 22,
@@ -209,7 +217,9 @@
             "FromPort": {
               "Ref": "OpenVpnPort"
             },
-            "IpProtocol": "udp",
+            "IpProtocol": {
+              "Ref": "OpenVpnProtocol"
+            },
             "ToPort": {
               "Ref": "OpenVpnPort"
             }

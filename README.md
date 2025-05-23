@@ -16,22 +16,31 @@ ssh -i "<PrivateKeyFileName>.pem" ubuntu@<PublicDnsName>
 ```sh
 sudo apt update
 sudo apt upgrade -y
-mkdir ovpn
-cd ovpn
+mkdir openvpn
+cd openvpn
 wget https://git.io/vpn -O openvpn-install.sh
 chmod +x openvpn-install.sh
 sudo ./openvpn-install.sh
-sudo mv /root/client.ovpn ./
+sudo mv /root/<ClientName>.ovpn ./
 exit
 ```
 
-7. And again from the local terminal:
+When installing openvpn, choose
+1) protocol: `UDP` or `TCP`, should match what's in the template
+2) Port: `1194` by default, should match what's in the template
+3) DNS servers: leave default
+4) client name: `client` by default
+
+5. And again from the local terminal:
 
 ```sh
-scp -i "<PrivateKeyFileName>.pem" ubuntu@<PublicDnsName>:~/ovpn/client.ovpn ./
+scp -i "<PrivateKeyFileName>.pem" ubuntu@<PublicDnsName>:~/openvpn/<ClientName>.ovpn ./
 ```
 
-8. This will copy the `client.ovpn` file to the local computer so it can be used by a OpenVPN client.
+8. This will copy the `<ClientName>.ovpn` file to the local computer so it can be used by a OpenVPN client.
+
+To add new client use `sudo ./openvpn-install.sh` and follow instructions, then copy file to the local computer
+as in the last step.
 
 ## Reference
 
